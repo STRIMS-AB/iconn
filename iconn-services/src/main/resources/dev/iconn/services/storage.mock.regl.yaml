@@ -1,0 +1,6 @@
+# Storage, mocked: files kept in memory, these at the start (path: text).
+# Strict: a mocked service holds its type and its mock, nothing else.
+strict: true
+fields:
+  type: { type: STRING, rules: [notNull, { enum: [storage] }] }
+  mock.files: ANY

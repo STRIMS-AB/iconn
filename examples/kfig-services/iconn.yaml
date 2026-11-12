@@ -1,0 +1,44 @@
+# ==============================================================================
+# iconn Topology: services in kfig's shape (the text a kfig file holds for one
+# environment). No `provider`: `mock` means mocked, connection details mean real.
+# The same file can live in kfig; Iconn.fromKfig(...) reads it from there.
+# ==============================================================================
+
+# Mocked: iconn gives these answers itself, no request leaves the process
+fraud.check:
+  type: http
+  mock:
+    - when: POST /score
+      body: {riskScore: 0.05, action: ALLOW}
+    - when: GET /customers/{id}
+      body: {id: "{id}", status: active}
+    - when: GET /health
+      status: 503
+      delay: 250ms
+      body: Fraud scoring is down
+
+payments.events:
+  type: queue
+  mock:
+    messages:
+      - {paymentId: pi_1, status: settled}
+
+payments.db:
+  type: database
+  mock:
+    schema: CREATE TABLE payments (id VARCHAR(20) PRIMARY KEY, amount INT);
+    data: INSERT INTO payments VALUES ('pi_1', 1200);
+
+checkout.sessions:
+  type: cache
+  mock:
+    entries: {s1: {cart: 3}}
+
+settlement.invoices:
+  type: storage
+  mock:
+    files: {"2026/inv-1.txt": Invoice 1}
+
+checkout.receipt_mail:
+  type: email
+  mock: {}

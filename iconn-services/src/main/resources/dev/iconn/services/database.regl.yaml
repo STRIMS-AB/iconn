@@ -1,0 +1,13 @@
+# Where data is kept, real: its connection details. Open: any other field is kept as written,
+# a block too (headers, security...). Chosen when the service has no mock.
+types:
+  Text: { type: STRING, rules: [notNull, notEmpty] }
+  Port: { type: INTEGER, rules: [notNull, { greaterThanOrEqual: 1 }, { lessThanOrEqual: 65535 }] }
+fields:
+  type: { type: STRING, rules: [notNull, { enum: [database] }] }
+  engine: Text
+  host: Text
+  port: Port
+  database: Text
+  poolSize: { type: INTEGER, rules: [positive] }
+  ssl: BOOLEAN

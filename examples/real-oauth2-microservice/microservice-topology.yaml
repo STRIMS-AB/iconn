@@ -1,0 +1,20 @@
+# Declarative topology connecting to a real OAuth2-secured downstream microservice
+paymentProvider:
+  type: http
+  provider: real
+  baseUrl: ${PAYMENT_GW_URL:https://api.stripe.com/v1}
+  timeout: 10s
+  headers:
+    X-Client-Id: iconn-integration-suite
+  security:
+    type: oauth2
+    tokenUrl: ${AUTH_SERVER_URL:https://auth.stripe.com/oauth/token}
+    clientId: ${OAUTH_CLIENT_ID:app-client-123}
+    clientSecret: ${OAUTH_CLIENT_SECRET:top-secret-key}
+    scope: payments:read payments:charge
+    expirySafetyMargin: 10s
+    autoRetryOn401: true
+
+notificationService:
+  type: email
+  provider: mock

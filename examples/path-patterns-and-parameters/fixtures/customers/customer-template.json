@@ -1,0 +1,7 @@
+{
+  "customerId": "${customerId}",
+  "name": "Customer ${customerId}",
+  "tier": "GOLD",
+  "status": "ACTIVE",
+  "email": "customer-${customerId}@example.com"
+}

@@ -1,0 +1,62 @@
+# ==============================================================================
+# iconn Topology: Dealer & Customer Mock with Dynamic Path Patterns
+# Demonstrates:
+#   1. Named path parameters: /dealers/{dealerId}/booking-engine
+#   2. Customer path parameters: /api/v1/customers/{customerId}
+#   3. Multiple path parameters: /dealers/{dealerId}/cars/{carId}
+#   4. Exact match priority: /dealers/flagship-vip/booking-engine
+#   5. Dynamic response & header interpolation using ${paramName}
+# ==============================================================================
+
+dealersApi:
+  type: http
+  provider: mock
+  stubs:
+    # 1. Exact path override (takes precedence over parameterized pattern)
+    - request:
+        method: GET
+        path: /dealers/flagship-vip/booking-engine
+      response:
+        status: 200
+        headers:
+          Content-Type: application/json
+          X-Dealer-Tier: "VIP"
+        body: |
+          {
+            "dealerId": "flagship-vip",
+            "tier": "FLAGSHIP_VIP",
+            "priority": "HIGH",
+            "bookingUrl": "https://dealers.example.com/vip/priority-booking"
+          }
+
+    # 2. Flexible parameterized pattern for any dealer
+    - request:
+        method: GET
+        path: /dealers/{dealerId}/booking-engine
+      response:
+        status: 200
+        headers:
+          Content-Type: application/json
+          X-Dealer-Id: "${dealerId}"
+        file: fixtures/dealers/booking-engine.json
+
+    # 3. Customer path parameter with JSON fixture
+    - request:
+        method: GET
+        path: /api/v1/customers/{customerId}
+      response:
+        status: 200
+        headers:
+          Content-Type: application/json
+          X-Customer-Id: "${customerId}"
+        file: fixtures/customers/customer-template.json
+
+  # 4. Shorthand routes with path parameters
+  responses:
+    "GET /dealers/{dealerId}/cars/{carId}": |
+      {
+        "dealerId": "${dealerId}",
+        "carId": "${carId}",
+        "status": "AVAILABLE"
+      }
+    "GET /dealers/{dealerId}/health": '{"dealerId":"${dealerId}","healthy":true}'

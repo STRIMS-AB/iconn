@@ -1,0 +1,539 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://iconn.dev/schema/iconn-schema.json",
+  "title": "iconn Topology Configuration",
+  "description": "Declarative integration dependency environment schema for iconn resources",
+  "definitions": {
+    "HttpAnswer": {
+      "type": "object",
+      "description": "One answer of a mocked HTTP endpoint, as kfig keeps it",
+      "required": [
+        "when"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "when": {
+          "type": "string",
+          "pattern": "^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) /\\S*$",
+          "description": "The method and the path: GET /customers/{id}; {name} matches any one part of the path"
+        },
+        "status": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599,
+          "default": 200
+        },
+        "body": {
+          "description": "Text, or any value answered as JSON; {id} in it repeats the path's {id}"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        },
+        "delay": {
+          "type": "string",
+          "pattern": "^\\d{1,6}(ms|s)$",
+          "description": "How long to wait before answering: 250ms, 2s"
+        }
+      }
+    },
+    "HttpStub": {
+      "type": "object",
+      "description": "A single HTTP request-response stub definition",
+      "properties": {
+        "request": {
+          "type": "object",
+          "description": "HTTP request matching criteria",
+          "properties": {
+            "method": {
+              "type": "string",
+              "default": "GET",
+              "description": "HTTP method to match (GET, POST, PUT, DELETE, PATCH, etc.)"
+            },
+            "path": {
+              "type": "string",
+              "default": "/",
+              "description": "Path pattern to match. Supports exact paths, named path parameters (/customers/{customerId}), regex patterns (/items/{id:[0-9]+}), and wildcards (* or **)"
+            },
+            "headers": {
+              "type": "object",
+              "description": "Required HTTP headers that must be present in the incoming request",
+              "additionalProperties": { "type": "string" }
+            },
+            "queryParams": {
+              "type": "object",
+              "description": "Required query parameters that must be present in the incoming request",
+              "additionalProperties": { "type": "string" }
+            },
+            "body": {
+              "type": "string",
+              "description": "Expected request body (exact string or substring)"
+            },
+            "bodyPattern": {
+              "type": "string",
+              "description": "Regex pattern the request body must match"
+            }
+          }
+        },
+        "response": {
+          "$ref": "#/definitions/HttpResponseConfig"
+        }
+      },
+      "required": ["response"],
+      "additionalProperties": false
+    },
+    "HttpResponseConfig": {
+      "type": "object",
+      "description": "HTTP response configuration",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599,
+          "default": 200,
+          "description": "HTTP response status code"
+        },
+        "headers": {
+          "type": "object",
+          "description": "Response headers. Supports dynamic ${param} interpolation from matched path parameters",
+          "additionalProperties": { "type": "string" }
+        },
+        "body": {
+          "type": "string",
+          "description": "Inline response body text/JSON/XML. Supports dynamic ${param} interpolation from matched path parameters"
+        },
+        "file": {
+          "type": "string",
+          "description": "Path to file containing response body, resolved relative to the YAML file"
+        },
+        "delay": {
+          "type": ["string", "integer"],
+          "description": "Latency injection delay before responding (e.g. '150ms', '2s', or integer milliseconds)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "HttpMockResource": {
+      "type": "object",
+      "description": "Mock HTTP server resource test double",
+      "properties": {
+        "mock": {
+          "type": "array",
+          "description": "The answers, as kfig keeps a mocked HTTP endpoint: the most precise path wins, no match answers 404",
+          "items": {
+            "$ref": "#/definitions/HttpAnswer"
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "http",
+          "description": "Resource type"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["mock"],
+          "default": "mock",
+          "description": "Mock HTTP server provider"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "default": 0,
+          "description": "Port to bind to. Default is 0 (ephemeral random free port)"
+        },
+        "host": {
+          "type": "string",
+          "default": "127.0.0.1",
+          "description": "Host interface to bind server to"
+        },
+        "export": {
+          "type": "object",
+          "description": "Dynamic properties to export to JVM System Properties upon startup",
+          "properties": {
+            "url": { "type": "string", "description": "System property name to store the resolved base URL (e.g. 'customer.api.url')" },
+            "port": { "type": "string", "description": "System property name to store the assigned port number (e.g. 'customer.api.port')" }
+          },
+          "additionalProperties": { "type": "string" }
+        },
+        "stubs": {
+          "type": "array",
+          "description": "List of HTTP stubs and route mappings",
+          "items": { "$ref": "#/definitions/HttpStub" }
+        },
+        "routes": {
+          "type": "array",
+          "description": "Alias for stubs",
+          "items": { "$ref": "#/definitions/HttpStub" }
+        },
+        "responses": {
+          "type": "object",
+          "description": "Shorthand map of 'METHOD /path' to response configurations",
+          "additionalProperties": { "$ref": "#/definitions/HttpResponseConfig" }
+        },
+        "config": {
+          "type": "object",
+          "description": "Optional nested configuration wrapper"
+        }
+      },
+      "required": ["type"]
+    },
+    "HttpRealResource": {
+      "type": "object",
+      "description": "Real external HTTP service connector with OAuth2 and token lifecycle management",
+      "properties": {
+        "apiKeyHeader": {
+          "type": "string",
+          "description": "The header that carries apiKey, as kfig keeps an HTTP endpoint"
+        },
+        "apiKey": {
+          "type": "string",
+          "description": "The key sent in apiKeyHeader"
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Connect timeout in milliseconds (kfig's name for timeout)"
+        },
+        "type": {
+          "type": "string",
+          "const": "http",
+          "description": "Resource type"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["real"],
+          "description": "Real HTTP connector provider"
+        },
+        "baseUrl": {
+          "type": "string",
+          "description": "Base URL of the remote external service"
+        },
+        "url": {
+          "type": "string",
+          "description": "Alias for baseUrl"
+        },
+        "timeout": {
+          "type": ["string", "integer"],
+          "default": "15s",
+          "description": "Client connection and request timeout (e.g. '10s', '5000ms')"
+        },
+        "headers": {
+          "type": "object",
+          "description": "Static headers injected into every outgoing request",
+          "additionalProperties": { "type": "string" }
+        },
+        "security": {
+          "type": "object",
+          "description": "Authentication and security credentials",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["oauth2"],
+              "description": "Authentication protocol"
+            },
+            "tokenUrl": {
+              "type": "string",
+              "description": "OAuth2 token endpoint URL"
+            },
+            "clientId": {
+              "type": "string",
+              "description": "OAuth2 Client ID (supports ${ENV_VAR})"
+            },
+            "clientSecret": {
+              "type": "string",
+              "description": "OAuth2 Client Secret (supports ${ENV_VAR})"
+            },
+            "scope": {
+              "type": "string",
+              "description": "OAuth2 scope string"
+            },
+            "cacheMargin": {
+              "type": ["string", "integer"],
+              "default": "30s",
+              "description": "Proactive refresh margin before token expiration (e.g. '30s', '1m')"
+            },
+            "autoRetryOn401": {
+              "type": "boolean",
+              "default": true,
+              "description": "Automatically acquire fresh token and retry once if 401 Unauthorized occurs"
+            }
+          },
+          "required": ["type", "tokenUrl", "clientId", "clientSecret"],
+          "additionalProperties": false
+        },
+        "export": {
+          "type": "object",
+          "description": "Dynamic properties to export to JVM System Properties",
+          "properties": {
+            "url": { "type": "string" }
+          },
+          "additionalProperties": { "type": "string" }
+        },
+        "config": {
+          "type": "object",
+          "description": "Optional nested configuration wrapper"
+        }
+      },
+      "required": ["type"]
+    },
+    "EmailMockResource": {
+      "type": "object",
+      "description": "Mock in-memory mailbox test double",
+      "properties": {
+        "mock": {
+          "type": "object",
+          "description": "Mocked, as kfig keeps it: mail is kept, never sent",
+          "additionalProperties": false,
+          "maxProperties": 0
+        },
+        "type": {
+          "type": "string",
+          "const": "email",
+          "description": "Resource type"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["mock"],
+          "default": "mock",
+          "description": "Mock email mailbox provider"
+        },
+        "config": {
+          "type": "object",
+          "description": "Optional nested configuration wrapper"
+        }
+      },
+      "required": ["type"]
+    },
+    "DatabaseEmbeddedResource": {
+      "type": "object",
+      "description": "Embedded in-memory H2 database with automatic schema execution and data seeding",
+      "properties": {
+        "mock": {
+          "type": "object",
+          "description": "Mocked, as kfig keeps it: an embedded database made from this SQL",
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "type": "string",
+              "description": "SQL, inline or a file"
+            },
+            "data": {
+              "type": "string",
+              "description": "SQL, inline or a file"
+            }
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "database",
+          "description": "Resource type"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["embedded"],
+          "default": "embedded",
+          "description": "Embedded in-memory database provider"
+        },
+        "mode": {
+          "type": "string",
+          "description": "H2 compatibility mode (e.g. 'PostgreSQL', 'MySQL', 'Oracle', 'MariaDB')"
+        },
+        "username": {
+          "type": "string",
+          "default": "sa",
+          "description": "Database username"
+        },
+        "password": {
+          "type": "string",
+          "default": "",
+          "description": "Database password"
+        },
+        "schema": {
+          "type": "string",
+          "description": "Path to SQL DDL schema file, resolved relative to the YAML file"
+        },
+        "data": {
+          "type": "string",
+          "description": "Path to SQL test data/seed script, resolved relative to the YAML file"
+        },
+        "seed": {
+          "type": "string",
+          "description": "Alias for data"
+        },
+        "export": {
+          "type": "object",
+          "description": "Dynamic properties to export to JVM System Properties upon startup",
+          "properties": {
+            "url": { "type": "string", "description": "System property name to export the dynamic JDBC URL to (e.g. 'spring.datasource.url')" },
+            "jdbcUrl": { "type": "string", "description": "Alias for url" },
+            "username": { "type": "string", "description": "System property name to export the database username to" },
+            "password": { "type": "string", "description": "System property name to export the database password to" }
+          },
+          "additionalProperties": { "type": "string" }
+        },
+        "config": {
+          "type": "object",
+          "description": "Optional nested configuration wrapper"
+        }
+      },
+      "required": ["type"]
+    },
+    "CacheResource": {
+      "type": "object",
+      "description": "Key/value cache backed by an in-memory map (embedded) or a real vendor cache",
+      "properties": {
+        "mock": {
+          "type": "object",
+          "description": "Mocked, as kfig keeps it: entries kept in memory",
+          "additionalProperties": false,
+          "properties": {
+            "entries": {
+              "type": "object",
+              "description": "Entries at the start: key: value"
+            }
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "cache",
+          "description": "Resource type"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["mock", "memory", "embedded"],
+          "default": "mock",
+          "description": "In-memory cache: entries are kept in the process. iconn has no connector for a real cache yet"
+        },
+        "config": {
+          "type": "object",
+          "description": "Optional nested configuration wrapper"
+        }
+      },
+      "required": ["type"]
+    },
+    "QueueResource": {
+      "type": "object",
+      "description": "Message broker backed by an in-memory broker (mock) or a real vendor broker",
+      "properties": {
+        "mock": {
+          "type": "object",
+          "description": "Mocked, as kfig keeps it: messages kept in memory",
+          "additionalProperties": false,
+          "properties": {
+            "messages": {
+              "type": "array",
+              "description": "Messages waiting at the start"
+            }
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "queue",
+          "description": "Resource type"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["mock", "memory", "inmemory", "embedded"],
+          "default": "mock",
+          "description": "In-memory queue: messages are kept in the process. iconn has no connector for a real broker yet"
+        },
+        "config": {
+          "type": "object",
+          "description": "Optional nested configuration wrapper"
+        }
+      },
+      "required": ["type"]
+    },
+    "StorageResource": {
+      "type": "object",
+      "description": "Blob/file storage backed by the local filesystem (mock) or a real vendor object store",
+      "properties": {
+        "mock": {
+          "type": "object",
+          "description": "Mocked, as kfig keeps it: files kept in memory",
+          "additionalProperties": false,
+          "properties": {
+            "files": {
+              "type": "object",
+              "description": "Files at the start: path: text",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "type": {
+          "type": "string",
+          "const": "storage",
+          "description": "Resource type"
+        },
+        "provider": {
+          "type": "string",
+          "enum": ["mock", "memory", "embedded"],
+          "default": "mock",
+          "description": "In-memory storage: files are kept in the process. iconn has no connector for a real object store yet"
+        },
+        "config": {
+          "type": "object",
+          "description": "Optional nested configuration wrapper"
+        }
+      },
+      "required": ["type"]
+    },
+    "Resource": {
+      "description": "An iconn resource declaration",
+      "oneOf": [
+        { "$ref": "#/definitions/HttpMockResource" },
+        { "$ref": "#/definitions/HttpRealResource" },
+        { "$ref": "#/definitions/EmailMockResource" },
+        { "$ref": "#/definitions/DatabaseEmbeddedResource" },
+        { "$ref": "#/definitions/CacheResource" },
+        { "$ref": "#/definitions/QueueResource" },
+        { "$ref": "#/definitions/StorageResource" }
+      ]
+    },
+    "Metadata": {
+      "type": "object",
+      "description": "Arbitrary metadata block (ignored by iconn loader)",
+      "additionalProperties": true
+    },
+    "Settings": {
+      "type": "object",
+      "description": "Environment settings block (ignored by iconn resource loader)",
+      "additionalProperties": true
+    }
+  },
+  "oneOf": [
+    {
+      "title": "Nested Syntax (with resources wrapper)",
+      "type": "object",
+      "properties": {
+        "metadata": { "$ref": "#/definitions/Metadata" },
+        "settings": { "$ref": "#/definitions/Settings" },
+        "resources": {
+          "type": "object",
+          "description": "Map of resource name to resource definition",
+          "additionalProperties": { "$ref": "#/definitions/Resource" }
+        }
+      },
+      "required": ["resources"],
+      "additionalProperties": false
+    },
+    {
+      "title": "Flat Syntax (resource names directly at root)",
+      "type": "object",
+      "properties": {
+        "metadata": { "$ref": "#/definitions/Metadata" },
+        "settings": { "$ref": "#/definitions/Settings" }
+      },
+      "additionalProperties": { "$ref": "#/definitions/Resource" }
+    }
+  ]
+}

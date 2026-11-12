@@ -1,0 +1,12 @@
+# An HTTP endpoint your code calls, real: its connection details. Open: any other field is kept as written,
+# a block too (headers, security...). Chosen when the service has no mock.
+types:
+  Text: { type: STRING, rules: [notNull, notEmpty] }
+  Port: { type: INTEGER, rules: [notNull, { greaterThanOrEqual: 1 }, { lessThanOrEqual: 65535 }] }
+fields:
+  type: { type: STRING, rules: [notNull, { enum: [http] }] }
+  url: { type: STRING, rules: [notNull, { pattern: "^[Hh][Tt][Tt][Pp][Ss]?://\\S+$" }] }
+  timeoutMs: { type: INTEGER, rules: [positive] }
+  apiKeyHeader: STRING
+  headers: ANY
+  security: ANY

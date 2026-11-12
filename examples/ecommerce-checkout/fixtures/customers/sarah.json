@@ -1,0 +1,13 @@
+{
+  "customerId": "cust_101",
+  "name": "Sarah Connor",
+  "email": "sarah@resistance.org",
+  "tier": "VIP_PLATINUM",
+  "defaultCurrency": "EUR",
+  "shippingAddress": {
+    "street": "100 Tech Way",
+    "city": "Berlin",
+    "postalCode": "10115",
+    "country": "DE"
+  }
+}

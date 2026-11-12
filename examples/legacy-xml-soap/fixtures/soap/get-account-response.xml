@@ -1,0 +1,12 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:acc="http://legacy.bank.com/account">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <acc:GetAccountDetailsResponse>
+         <acc:AccountNumber>DE89370400440532013000</acc:AccountNumber>
+         <acc:AccountHolder>Sarah Connor</acc:AccountHolder>
+         <acc:Balance>12500.00</acc:Balance>
+         <acc:Currency>EUR</acc:Currency>
+         <acc:Status>ACTIVE</acc:Status>
+      </acc:GetAccountDetailsResponse>
+   </soapenv:Body>
+</soapenv:Envelope>

@@ -1,0 +1,37 @@
+resources:
+  customerApi:
+    type: http
+    provider: mock
+    stubs:
+      - request:
+          method: GET
+          path: /customers/999
+        response:
+          status: 200
+          file: fixtures/customer-details.json
+
+      - request:
+          method: POST
+          path: /customers
+          body: "Sarah"
+        response:
+          status: 201
+          body: '{"created": true, "id": 999}'
+
+      - request:
+          method: GET
+          path: /unstable-endpoint
+        response:
+          status: 503
+          file: fixtures/error-503.json
+          headers:
+            Retry-After: "30"
+          delay: 20ms
+
+  shorthandApi:
+    type: http
+    provider: mock
+    responses:
+      "GET /ping": "PONG"
+      "GET /details": fixtures/customer-details.json
+      "DELETE /session": 204

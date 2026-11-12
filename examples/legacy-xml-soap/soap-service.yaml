@@ -1,0 +1,29 @@
+# ==============================================================================
+# iconn Topology: Legacy SOAP / XML Banking API (Pure File Configuration)
+# All files are located relative to this YAML file (no "classpath:" prefix needed)
+# ==============================================================================
+
+resources:
+
+  bankingCore:
+    type: http
+    provider: mock
+    stubs:
+      - request:
+          method: POST
+          path: /ws/AccountService
+          body: "DE89370400440532013000"
+        response:
+          status: 200
+          file: fixtures/soap/get-account-response.xml
+          headers:
+            Content-Type: text/xml; charset=utf-8
+
+      - request:
+          method: POST
+          path: /ws/AccountService
+        response:
+          status: 500
+          file: fixtures/soap/soap-fault.xml
+          headers:
+            Content-Type: text/xml; charset=utf-8

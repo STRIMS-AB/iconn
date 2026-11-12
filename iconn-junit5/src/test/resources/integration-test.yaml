@@ -1,0 +1,12 @@
+resources:
+  customerApi:
+    type: http
+    provider: mock
+
+  mail:
+    type: email
+    provider: mock
+
+  database:
+    type: database
+    provider: embedded

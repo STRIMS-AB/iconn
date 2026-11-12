@@ -1,0 +1,39 @@
+dealersApi:
+  type: http
+  provider: mock
+  export:
+    url: dealers.api.url
+    port: dealers.api.port
+  stubs:
+    # 1. Exact path override: takes priority over parameterized route
+    - request:
+        method: GET
+        path: /dealers/flagship-vip/booking-engine
+      response:
+        status: 200
+        headers:
+          X-Dealer-Tier: "VIP"
+        body: '{"dealerId":"flagship-vip","tier":"VIP"}'
+
+    # 2. Dynamic path parameter for any dealer booking engine
+    - request:
+        method: GET
+        path: /dealers/{dealerId}/booking-engine
+      response:
+        status: 200
+        headers:
+          X-Dealer-Id: "${dealerId}"
+        file: fixtures/dealers-booking.json
+
+    # 3. Dynamic customer path parameter
+    - request:
+        method: GET
+        path: /api/v1/customers/{customerId}
+      response:
+        status: 200
+        headers:
+          X-Customer-Id: "${customerId}"
+        file: fixtures/customer-template.json
+
+  responses:
+    "GET /dealers/{dealerId}/cars/{carId}": '{"dealerId":"${dealerId}","carId":"${carId}"}'

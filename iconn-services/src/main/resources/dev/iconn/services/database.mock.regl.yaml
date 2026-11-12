@@ -1,0 +1,7 @@
+# A database, mocked: an embedded database made from this SQL.
+# Strict: a mocked service holds its type and its mock, nothing else.
+strict: true
+fields:
+  type: { type: STRING, rules: [notNull, { enum: [database] }] }
+  mock.schema: STRING
+  mock.data: STRING

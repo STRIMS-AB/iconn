@@ -1,0 +1,3 @@
+dev.iconn.core.file.FileConnectorFactory
+dev.iconn.core.queue.QueueConnectorFactory
+dev.iconn.core.memory.MemoryConnectorFactory

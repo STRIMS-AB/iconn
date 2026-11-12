@@ -1,0 +1,6 @@
+# An email server, mocked: the mail sent is kept, none is delivered.
+# Strict: a mocked service holds its type and its mock, nothing else.
+strict: true
+fields:
+  type: { type: STRING, rules: [notNull, { enum: [email] }] }
+  mock: ANY

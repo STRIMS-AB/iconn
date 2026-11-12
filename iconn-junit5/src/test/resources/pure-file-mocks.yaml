@@ -1,0 +1,38 @@
+resources:
+  customerService:
+    type: http
+    provider: mock
+    stubs:
+      - request:
+          method: GET
+          path: /api/v1/customers/101
+        response:
+          status: 200
+          file: fixtures/customer-101.json
+
+      - request:
+          method: POST
+          path: /api/v1/customers
+        response:
+          status: 201
+          body: '{"id": 202, "status": "CREATED"}'
+
+  paymentService:
+    type: http
+    provider: mock
+    stubs:
+      - request:
+          method: POST
+          path: /v1/charges
+        response:
+          status: 503
+          body: '{"error": "Payment gateway down"}'
+          headers:
+            Retry-After: "45"
+
+  quickApi:
+    type: http
+    provider: mock
+    responses:
+      "GET /status": '{"ready": true}'
+      "GET /profile": fixtures/customer-101.json

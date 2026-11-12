@@ -1,0 +1,7 @@
+{
+  "dealerId": "${dealerId}",
+  "engine": "v2.5-enterprise",
+  "status": "ONLINE",
+  "portalUrl": "https://dealers.example.com/${dealerId}/booking",
+  "calendarApi": "https://api.example.com/dealers/${dealerId}/calendar"
+}

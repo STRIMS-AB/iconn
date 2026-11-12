@@ -1,0 +1,6 @@
+# A cache, mocked: entries kept in memory, these at the start (key: value).
+# Strict: a mocked service holds its type and its mock, nothing else.
+strict: true
+fields:
+  type: { type: STRING, rules: [notNull, { enum: [cache] }] }
+  mock.entries: ANY

@@ -1,0 +1,6 @@
+{
+  "status": 429,
+  "error": "Too Many Requests",
+  "message": "API rate limit exceeded: quota 100 req/sec exceeded.",
+  "quotaRemaining": 0
+}

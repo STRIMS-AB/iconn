@@ -1,0 +1,5 @@
+{
+  "status": 504,
+  "error": "Gateway Timeout",
+  "message": "Upstream banking partner timed out after 5000ms."
+}

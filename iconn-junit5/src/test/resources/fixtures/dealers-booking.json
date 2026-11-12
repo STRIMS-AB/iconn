@@ -1,0 +1,6 @@
+{
+  "dealerId": "${dealerId}",
+  "engine": "v2.5",
+  "status": "ONLINE",
+  "bookingUrl": "https://dealers.example.com/${dealerId}/calendar"
+}

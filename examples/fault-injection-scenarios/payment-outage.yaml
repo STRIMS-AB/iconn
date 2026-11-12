@@ -1,0 +1,50 @@
+# ==============================================================================
+# iconn Topology: Fault Injection & Outage Scenario (Pure File Configuration)
+# All files are located relative to this YAML file (no "classpath:" prefix needed)
+# ==============================================================================
+
+resources:
+
+  # Gateway experiencing temporary 503 outage with Retry-After header
+  flakyPaymentGateway:
+    type: http
+    provider: mock
+    stubs:
+      - request:
+          method: POST
+          path: /charges
+        response:
+          status: 503
+          body: '{"error": "Service Temporarily Unavailable", "maintenance": true}'
+          headers:
+            Retry-After: "60"
+            Content-Type: application/json
+          delay: 50ms
+
+  # Rate-limited third-party credit score check
+  creditScoreApi:
+    type: http
+    provider: mock
+    stubs:
+      - request:
+          method: GET
+          path: /score/v1
+        response:
+          status: 429
+          file: fixtures/errors/rate-limit.json
+          headers:
+            Retry-After: "120"
+            X-RateLimit-Limit: "100"
+
+  # Timeout simulator (delays response by 3 seconds)
+  slowAnalyticsService:
+    type: http
+    provider: mock
+    stubs:
+      - request:
+          method: POST
+          path: /events
+        response:
+          status: 504
+          file: fixtures/errors/gateway-timeout.json
+          delay: 3s

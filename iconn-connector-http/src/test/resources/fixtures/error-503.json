@@ -1,0 +1,5 @@
+{
+  "code": "PAYMENT_GATEWAY_DOWN",
+  "message": "The payment upstream server is temporarily unreachable. Please retry.",
+  "retryable": true
+}

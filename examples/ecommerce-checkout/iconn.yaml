@@ -1,0 +1,55 @@
+# ==============================================================================
+# iconn Topology: E-Commerce Checkout Environment (Pure File Configuration)
+# All files are located relative to this YAML file (no "classpath:" prefix needed)
+# ==============================================================================
+
+resources:
+
+  # 1. Customer Management Service
+  customerService:
+    type: http
+    provider: mock
+    stubs:
+      - request:
+          method: GET
+          path: /api/v1/customers/cust_101
+        response:
+          status: 200
+          file: fixtures/customers/sarah.json
+
+  # 2. Payment Gateway
+  paymentGateway:
+    type: http
+    provider: mock
+    stubs:
+      - request:
+          method: POST
+          path: /v2/charges
+          body: "cust_101"
+        response:
+          status: 200
+          file: fixtures/payments/payment-approved.json
+          delay: 25ms
+
+  # 3. Inventory Warehouse API (Shorthand routes)
+  inventoryApi:
+    type: http
+    provider: mock
+    responses:
+      "GET /warehouse/stock/ITEM_TECH_42": fixtures/inventory/item-in-stock.json
+      "POST /warehouse/reserve":
+        status: 200
+        body: '{"reserved": true, "reservationId": "resv_4829"}'
+
+  # 4. Relational Order Database (Embedded H2 with DDL & Seeds)
+  orderDatabase:
+    type: database
+    provider: embedded
+    config:
+      schema: fixtures/db/schema.sql
+      data: fixtures/db/initial-products.sql
+
+  # 5. Email Notification Server
+  mailer:
+    type: email
+    provider: mock

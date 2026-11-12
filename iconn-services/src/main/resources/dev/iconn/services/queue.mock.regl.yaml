@@ -1,0 +1,7 @@
+# A queue, mocked: messages kept in memory, the given ones waiting at the start.
+# Strict: a mocked service holds its type and its mock, nothing else.
+strict: true
+fields:
+  type: { type: STRING, rules: [notNull, { enum: [queue] }] }
+  mock.messages: { type: LIST }
+  mock.messages.*: ANY

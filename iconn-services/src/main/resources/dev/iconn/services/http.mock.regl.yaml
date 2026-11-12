@@ -1,0 +1,11 @@
+# An HTTP endpoint, mocked: its answers. The most precise path wins, no match answers 404.
+# Strict: a mocked service holds its type and its mock, nothing else.
+strict: true
+fields:
+  type: { type: STRING, rules: [notNull, { enum: [http] }] }
+  mock: { type: LIST, rules: [notNull] }
+  mock.*.when: { type: STRING, rules: [notNull, { pattern: "^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) /\\S*$" }] }
+  mock.*.status: { type: INTEGER, rules: [{ greaterThanOrEqual: 100 }, { lessThanOrEqual: 599 }] }
+  mock.*.body: ANY
+  mock.*.headers: ANY
+  mock.*.delay: { type: STRING, rules: [{ pattern: "^\\d{1,6}(ms|s)$" }] }
